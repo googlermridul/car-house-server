@@ -13,13 +13,14 @@ const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
 app.get('/', (req, res) => {
-   res.send('CarHouse Serverless!')
+   res.send('CarHouse Server!')
 })
 
 client.connect(err => {
    const carsCollection = client.db("carHouse").collection("cars");
    const orderCollection = client.db("carHouse").collection("orders");
    const reviewCollection = client.db("carHouse").collection("reviews");
+   const userCollection = client.db("carHouse").collection("users");
    
    // add a single car by admin
    app.post('/addCar', async(req, res) => {
@@ -78,19 +79,59 @@ client.connect(err => {
       res.send(result)
    })
 
-
    // add review
    app.post('/addReview', async(req, res) => {
       const result = await reviewCollection.insertOne(req.body);
       res.send(result)
    })
 
-   // load all bookings data
+   // load all reviews
    app.get('/reviews', async(req, res) => {
       const result = await reviewCollection.find({}).toArray()
       res.send(result)
    })
 
+   // check whether admin
+   app.get('/users/:email', async(req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const user = await userCollection.findOne(query);
+      let isAdmin = false;
+      if(user?.role === 'admin') {
+         isAdmin = true;
+      }
+      res.send({admin: isAdmin});
+   })
+
+   // add user data
+   app.post('/addUser', async(req, res) => {
+      const result = await userCollection.insertOne(req.body);
+      res.send(result)
+   })
+
+   app.put('/addUser', async(req, res) => {
+      const user = req.body;
+      const filter = { email: user.email }
+      const options = { upsert: true };
+      const updateDoc = { $set: user };
+      
+      const result = await userCollection.updateOne(filter, updateDoc, options);
+      res.send(result)
+   })
+
+   // make an admin
+   app.put('/addUser/admin', async(req, res) => {
+      const user = req.body;
+      const filter = { email: user.email }
+      const updateDoc = { $set: {role: 'admin'} };
+      
+      const result = await userCollection.updateOne(filter, updateDoc);
+      res.send(result)
+      console.log(result);
+   })
+
+
+   
 });
 
 
