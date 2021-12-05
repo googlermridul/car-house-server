@@ -13,59 +13,60 @@ const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
 app.get('/', (req, res) => {
-   res.send('CarHouse Server!')
+   res.send('CarHouse Serverless!')
 })
 
 client.connect(err => {
-   const packageCollection = client.db("yatra").collection("packages");
-   const orderCollection = client.db("yatra").collection("bookings");
+   const carsCollection = client.db("carHouse").collection("cars");
+   const orderCollection = client.db("carHouse").collection("orders");
+   const reviewCollection = client.db("carHouse").collection("reviews");
    
-   // add a single package
-   app.post('/addPackage', async(req, res) => {
-      const result = await packageCollection.insertOne(req.body);
+   // add a single car by admin
+   app.post('/addCar', async(req, res) => {
+      const result = await carsCollection.insertOne(req.body);
       res.send(result)
    })
 
-   // load all packages
-   app.get('/packages', async(req, res) => {
-      const result = await packageCollection.find({}).toArray()
+   // load all cars showed in home page
+   app.get('/cars', async(req, res) => {
+      const result = await carsCollection.find({}).toArray()
       res.send(result)
    })
 
    // delete package
-   app.delete('/deletePackage/:id', async(req, res) => {
+   app.delete('/deleteCar/:id', async(req, res) => {
       const query = {_id: ObjectId(req.params.id)}
-      const result = await packageCollection.deleteOne(query);
+      const result = await carsCollection.deleteOne(query);
       res.send(result)
    })
 
    // add bookings
-   app.post('/addBooking', async(req, res) => {
+   app.post('/addOrder', async(req, res) => {
       const result = await orderCollection.insertOne(req.body);
       res.send(result)
    })
 
    // load all bookings data
-   app.get('/bookings', async(req, res) => {
+   app.get('/orders', async(req, res) => {
       const result = await orderCollection.find({}).toArray()
       res.send(result)
    })
 
    // load a specific booking data
-   app.get('/bookings/:email', async(req, res) => {
+   app.get('/orders/:email', async(req, res) => {
       const result = await orderCollection.find({email: req.params.email}).toArray()
       res.send(result)
    })
 
    // delete booking data
-   app.delete('/deleteBooking/:id', async(req, res) => {
+   app.delete('/deleteOrder/:id', async(req, res) => {
       const query = {_id: ObjectId(req.params.id)}
       const result = await orderCollection.deleteOne(query);
       res.send(result)
    })
 
    // update bookings status
-   app.put('/bookings/:id', async (req, res) => {
+   app.put('/orders/:id', async (req, res) => {
       const filter = {_id: ObjectId(req.params.id) }
       const options = { upsert: true };
       const updateDoc = {
@@ -74,6 +75,19 @@ client.connect(err => {
          },
       };
       const result = await orderCollection.updateOne(filter, updateDoc, options);
+      res.send(result)
+   })
+
+
+   // add review
+   app.post('/addReview', async(req, res) => {
+      const result = await reviewCollection.insertOne(req.body);
+      res.send(result)
+   })
+
+   // load all bookings data
+   app.get('/reviews', async(req, res) => {
+      const result = await reviewCollection.find({}).toArray()
       res.send(result)
    })
 
